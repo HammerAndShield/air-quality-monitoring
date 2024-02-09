@@ -1,14 +1,14 @@
 CREATE TABLE AirQualityRecord (
-                                  ID SERIAL PRIMARY KEY,
-                                  OverallAQI INT NOT NULL,
-                                  Timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  id SERIAL PRIMARY KEY,
+                                  overallaqi INT NOT NULL,
+                                  timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Pollutant (
-                           ID SERIAL PRIMARY KEY,
-                           RecordID INT NOT NULL,
-                           Name VARCHAR(50) NOT NULL,
-                           Concentration FLOAT NOT NULL,
-                           AQI INT NOT NULL,
-                           FOREIGN KEY (RecordID) REFERENCES AirQualityRecord(ID)
+                           id SERIAL PRIMARY KEY,
+                           recordid INT NOT NULL,
+                           name VARCHAR(50) NOT NULL,
+                           concentration FLOAT NOT NULL,
+                           aqi INT NOT NULL,
+                           FOREIGN KEY (RecordID) REFERENCES AirQualityRecord(id)
 );

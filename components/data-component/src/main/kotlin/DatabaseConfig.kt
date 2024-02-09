@@ -6,14 +6,13 @@ import io.github.cdimascio.dotenv.dotenv
 import org.jetbrains.exposed.sql.Database
 
 object DatabaseConfig {
-    private val dotenv = dotenv()
 
     fun init() {
         val config = HikariConfig().apply {
-            jdbcUrl = dotenv["DB_URL"] ?: throw IllegalStateException("DB_URL not found in .env file")
+            jdbcUrl = System.getenv("DB_URL") ?: throw IllegalStateException("DB_URL not found")
             driverClassName = "org.postgresql.Driver"
-            username = dotenv["DB_USER"] ?: throw IllegalStateException("DB_USER not found in .env file")
-            password = dotenv["DB_PASSWORD"] ?: throw IllegalStateException("DB_PASSWORD not found in .env file")
+            username = System.getenv("DB_USER") ?: throw IllegalStateException("DB_USER not found")
+            password = System.getenv("DB_PASSWORD") ?: throw IllegalStateException("DB_PASSWORD not found")
             maximumPoolSize = 10
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"

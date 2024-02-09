@@ -1,5 +1,7 @@
+import org.jetbrains.kotlin.ir.backend.js.compile
+
 plugins {
-    kotlin("jvm") version "1.9.21"
+    kotlin("jvm") version "1.9.22"
 }
 
 group = "org.hammernshield"
