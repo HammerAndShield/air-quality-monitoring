@@ -115,4 +115,86 @@ class DbOperationsIT {
         )
     }
 
+    @Test
+    fun testGetXPastRecords() {
+        val now = LocalDateTime.now()
+        val recordsData = listOf(
+            AirQualityData(overallAqi = 50, pollutants = listOf(PollutantData(name = "PM2.5", concentration = 35.5f, aqi = 50))),
+            AirQualityData(overallAqi = 60, pollutants = listOf(PollutantData(name = "PM10", concentration = 40.0f, aqi = 60))),
+            AirQualityData(overallAqi = 70, pollutants = listOf(PollutantData(name = "O3", concentration = 180.0f, aqi = 70)))
+        )
+
+        recordsData.forEachIndexed { index, airQualityData ->
+            transaction {
+                val recordId = AirQualityRecord.insertAndGetId {
+                    it[overallAqi] = airQualityData.overallAqi
+                    it[timestamp] = now.minusDays(index.toLong())
+                }
+                airQualityData.pollutants.forEach { pollutant ->
+                    Pollutant.insert {
+                        it[Pollutant.recordId] = recordId.value
+                        it[Pollutant.name] = pollutant.name
+                        it[Pollutant.concentration] = pollutant.concentration
+                        it[Pollutant.aqi] = pollutant.aqi
+                    }
+                }
+            }
+        }
+
+        val x = 2
+        val retrievedRecords = dataService.getXPastRecords(x)
+
+        assertAll("Verify correct retrieval and data mapping for the last X records",
+            { assertEquals(x, retrievedRecords.size, "Should retrieve exactly X records.") },
+            {
+                val expectedAqis = listOf(70, 60)
+                val retrievedAqis = retrievedRecords.map { it.overallAqi }.sortedDescending()
+                assertEquals(expectedAqis, retrievedAqis, "The overall AQIs of the retrieved records should match the latest inserted records.")
+
+            }
+        )
+    }
+
+    @Test
+    fun testGetMostRecentAirQualityRecord() {
+        val now = LocalDateTime.now()
+        val testData = listOf(
+            AirQualityData(overallAqi = 35, pollutants = listOf(PollutantData(name = "CO", concentration = 287.06f, aqi = 3))),
+            AirQualityData(overallAqi = 50, pollutants = listOf(PollutantData(name = "PM2.5", concentration = 35.5f, aqi = 50)))
+        )
+
+        testData.forEachIndexed { index, data ->
+            transaction {
+                val recordId = AirQualityRecord.insertAndGetId {
+                    it[overallAqi] = data.overallAqi
+                    it[timestamp] = now.plusHours(index.toLong())
+                }
+                data.pollutants.forEach { pollutant ->
+                    Pollutant.insert {
+                        it[Pollutant.recordId] = recordId.value
+                        it[Pollutant.name] = pollutant.name
+                        it[Pollutant.concentration] = pollutant.concentration
+                        it[Pollutant.aqi] = pollutant.aqi
+                    }
+                }
+            }
+        }
+
+        val mostRecentRecord = dataService.getMostRecentAirQualityRecord()
+
+
+        assertAll("Verify the most recent record is retrieved correctly",
+            { assertEquals(testData.last().overallAqi, mostRecentRecord.overallAqi, "The overall AQI should match the most recent record.") },
+            { assertEquals(testData.last().pollutants.size, mostRecentRecord.pollutants.size, "The number of pollutants should match.") },
+            {
+                val expectedPollutant = testData.last().pollutants.first()
+                val actualPollutant = mostRecentRecord.pollutants.first()
+                assertEquals(expectedPollutant.name, actualPollutant.name, "Pollutant names should match.")
+                assertEquals(expectedPollutant.concentration, actualPollutant.concentration, "Pollutant concentrations should match.")
+                assertEquals(expectedPollutant.aqi, actualPollutant.aqi, "Pollutant AQIs should match.")
+            }
+        )
+    }
+
+
 }
