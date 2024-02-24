@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class AirQualityController(@Autowired val airQualityService: AirQualityDataService) {
 
-    @GetMapping("/air-quality/latest")
+    @GetMapping("/air-quality/")
     fun getMostRecentAirQualityRecord(): ResponseEntity<AirQualityData> {
         return try {
             val mostRecentRecord = airQualityService.getMostRecentAirQualityRecord()
@@ -21,7 +21,7 @@ class AirQualityController(@Autowired val airQualityService: AirQualityDataServi
         }
     }
 
-    @GetMapping("/air-quality/past-3-days")
+    @GetMapping("/air-quality/recent")
     fun getPast3DaysAirQualityRecords(): ResponseEntity<List<AirQualityData>> {
         return try {
             val records = airQualityService.getPast3DaysAirQualityData()
@@ -31,7 +31,7 @@ class AirQualityController(@Autowired val airQualityService: AirQualityDataServi
         }
     }
 
-    @GetMapping("/air-quality/get-x-records")
+    @GetMapping("/air-quality/records")
     fun getXAirQualityRecords(
         @RequestParam x: Int
     ): ResponseEntity<List<AirQualityData>> {
