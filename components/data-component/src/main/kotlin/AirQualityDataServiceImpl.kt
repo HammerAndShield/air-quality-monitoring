@@ -37,6 +37,7 @@ class AirQualityDataServiceImpl : AirQualityDataService {
             mostRecentRecord?.let { record ->
                 val recordId = record[AirQualityRecord.id].value
                 val overallAqi = record[AirQualityRecord.overallAqi]
+                val timestamp = record[AirQualityRecord.timestamp]
 
                 val pollutants = Pollutant.select { Pollutant.recordId eq recordId }.map { pollutant ->
                     PollutantData(
@@ -46,64 +47,58 @@ class AirQualityDataServiceImpl : AirQualityDataService {
                     )
                 }
 
-                AirQualityData(overallAqi, pollutants)
+                AirQualityData(overallAqi, pollutants, timestamp)
             } ?: throw NoSuchElementException("No air quality record found")
         }
     }
 
+
     override fun getPast3DaysAirQualityData(): List<AirQualityData> {
-         return transaction {
-             val airQualityDataMap = mutableMapOf<Int, AirQualityData>()
-             val threeDaysAgo = LocalDateTime.now().minusDays(3)
-
-             val airqualityRecords = AirQualityRecord.select {
-                 AirQualityRecord.timestamp greaterEq threeDaysAgo
-             }.orderBy(AirQualityRecord.timestamp, SortOrder.DESC)
-
-             airqualityRecords.forEach { record ->
-                 val recordId = record[AirQualityRecord.id].value
-                 val overallAqi = record[AirQualityRecord.overallAqi]
-
-                 val pollutants = Pollutant.select { Pollutant.recordId eq recordId }.map { pollutant ->
-                     PollutantData(
-                         name = pollutant[Pollutant.name],
-                         concentration = pollutant[Pollutant.concentration],
-                         aqi = pollutant[Pollutant.aqi]
-                     )
-                 }
-
-                 airQualityDataMap[recordId] = AirQualityData(overallAqi, pollutants)
-
-             }
-
-             airQualityDataMap.values.toList()
+        return transaction {
+            val threeDaysAgo = LocalDateTime.now().minusDays(3)
+            AirQualityRecord.select {
+                AirQualityRecord.timestamp greaterEq threeDaysAgo
+            }.orderBy(AirQualityRecord.timestamp, SortOrder.DESC)
+                .map { record ->
+                    val recordId = record[AirQualityRecord.id].value
+                    val overallAqi = record[AirQualityRecord.overallAqi]
+                    val timestamp = record[AirQualityRecord.timestamp]
+                    val pollutants = Pollutant.select { Pollutant.recordId eq recordId }
+                        .map { pollutant ->
+                            PollutantData(
+                                name = pollutant[Pollutant.name],
+                                concentration = pollutant[Pollutant.concentration],
+                                aqi = pollutant[Pollutant.aqi]
+                            )
+                        }
+                    AirQualityData(overallAqi, pollutants, timestamp)
+                }
         }
     }
+
 
     override fun getXPastRecords(x: Int): List<AirQualityData> {
         return transaction {
-            val airQualityDataMap = mutableMapOf<Int, AirQualityData>()
-
-            val airqualityRecords = AirQualityRecord.selectAll()
-                .orderBy(AirQualityRecord.id, SortOrder.DESC)
+            AirQualityRecord.selectAll()
+                .orderBy(AirQualityRecord.timestamp, SortOrder.DESC) // Sort by timestamp instead of id for consistency
                 .limit(x)
-
-            airqualityRecords.forEach { record ->
-                val recordId = record[AirQualityRecord.id].value
-                val overallAqi = record[AirQualityRecord.overallAqi]
-
-                val pollutants = Pollutant.select { Pollutant.recordId eq recordId }.map { pollutant ->
-                    PollutantData(
-                        name = pollutant[Pollutant.name],
-                        concentration = pollutant[Pollutant.concentration],
-                        aqi = pollutant[Pollutant.aqi]
-                    )
+                .map { record ->
+                    val recordId = record[AirQualityRecord.id].value
+                    val overallAqi = record[AirQualityRecord.overallAqi]
+                    val timestamp = record[AirQualityRecord.timestamp] // Fetch the timestamp
+                    val pollutants = Pollutant.select { Pollutant.recordId eq recordId }
+                        .map { pollutant ->
+                            PollutantData(
+                                name = pollutant[Pollutant.name],
+                                concentration = pollutant[Pollutant.concentration],
+                                aqi = pollutant[Pollutant.aqi]
+                            )
+                        }
+                    AirQualityData(overallAqi, pollutants, timestamp)
                 }
-                airQualityDataMap[recordId] = AirQualityData(overallAqi, pollutants)
-            }
-            airQualityDataMap.values.toList()
         }
     }
+
 
 }
 

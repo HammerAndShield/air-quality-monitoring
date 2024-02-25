@@ -52,7 +52,8 @@ class DbOperationsIT {
             overallAqi = 35,
             pollutants = listOf(
                 PollutantData(name = "CO", concentration = 287.06f, aqi = 3),
-            )
+            ),
+            timestamp = LocalDateTime.now()
         )
 
         dataService.insertAirQualityData(testData)
@@ -119,16 +120,16 @@ class DbOperationsIT {
     fun testGetXPastRecords() {
         val now = LocalDateTime.now()
         val recordsData = listOf(
-            AirQualityData(overallAqi = 50, pollutants = listOf(PollutantData(name = "PM2.5", concentration = 35.5f, aqi = 50))),
-            AirQualityData(overallAqi = 60, pollutants = listOf(PollutantData(name = "PM10", concentration = 40.0f, aqi = 60))),
-            AirQualityData(overallAqi = 70, pollutants = listOf(PollutantData(name = "O3", concentration = 180.0f, aqi = 70)))
+            AirQualityData(overallAqi = 50, pollutants = listOf(PollutantData(name = "PM2.5", concentration = 35.5f, aqi = 50)), timestamp = now.minusDays(2)),
+            AirQualityData(overallAqi = 60, pollutants = listOf(PollutantData(name = "PM10", concentration = 40.0f, aqi = 60)), timestamp = now.minusDays(1)),
+            AirQualityData(overallAqi = 70, pollutants = listOf(PollutantData(name = "O3", concentration = 180.0f, aqi = 70)), timestamp = now)
         )
 
         recordsData.forEachIndexed { index, airQualityData ->
             transaction {
                 val recordId = AirQualityRecord.insertAndGetId {
                     it[overallAqi] = airQualityData.overallAqi
-                    it[timestamp] = now.minusDays(index.toLong())
+                    it[timestamp] = airQualityData.timestamp
                 }
                 airQualityData.pollutants.forEach { pollutant ->
                     Pollutant.insert {
@@ -159,8 +160,8 @@ class DbOperationsIT {
     fun testGetMostRecentAirQualityRecord() {
         val now = LocalDateTime.now()
         val testData = listOf(
-            AirQualityData(overallAqi = 35, pollutants = listOf(PollutantData(name = "CO", concentration = 287.06f, aqi = 3))),
-            AirQualityData(overallAqi = 50, pollutants = listOf(PollutantData(name = "PM2.5", concentration = 35.5f, aqi = 50)))
+            AirQualityData(overallAqi = 35, pollutants = listOf(PollutantData(name = "CO", concentration = 287.06f, aqi = 3)), timestamp = LocalDateTime.now()),
+            AirQualityData(overallAqi = 50, pollutants = listOf(PollutantData(name = "PM2.5", concentration = 35.5f, aqi = 50)), timestamp = LocalDateTime.now())
         )
 
         testData.forEachIndexed { index, data ->

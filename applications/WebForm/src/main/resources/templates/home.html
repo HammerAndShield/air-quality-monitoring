@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Las Vegas Air Quality Dashboard</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .content {
+            max-width: 800px;
+            margin: auto;
+        }
+        h1, h2, h3, .header {
+            text-align: center;
+            color: #ffffff;
+        }
+        .button-container, .form-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        a.button, button {
+            display: inline-block;
+            margin: 10px;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px;
+            background-color: #333333;
+            border: none;
+            border-radius: 5px;
+        }
+        input[type="number"] {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ffffff;
+            background-color: #333333;
+            color: #ffffff;
+            margin-right: 5px;
+        }
+        .pollutant {
+            border-bottom: 1px solid #333333;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .pollutant:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <h1>Las Vegas Air Quality Dashboard</h1>
+    <div class="button-container">
+        <h2 class="header">Latest 3 Days</h2>
+        <a href="/latest" class="button">View Latest 3 Days</a>
+    </div>
+    <div class="form-container">
+        <h2 class="header">Get X Most Recent Records</h2>
+        <form action="/latest/records" method="get">
+            <input type="number" name="amount" placeholder="Enter number of records" required>
+            <button type="submit">Get Records</button>
+        </form>
+    </div>
+    <div th:if="${airQualityData}">
+        <h2>Most Recent Air Quality</h2>
+        <p><strong>Total AQI:</strong> <span th:text="${airQualityData.overallAqi}"></span></p>
+        <p><strong>Timestamp:</strong> <span th:text="${#temporals.format(airQualityData.timestamp, 'yyyy-MM-dd ''at'' HH:mm')}"></span></p>
+        <div>
+            <h3>Pollutants</h3>
+            <div th:each="pollutant : ${airQualityData.pollutants}" class="pollutant">
+                <p><strong>Name:</strong> <span th:text="${pollutant.name}"></span></p>
+                <p><strong>Concentration:</strong> <span th:text="${pollutant.concentration}"></span></p>
+                <p><strong>AQI:</strong> <span th:text="${pollutant.aqi}"></span></p>
+            </div>
+        </div>
+    </div>
+    <div th:unless="${airQualityData}">
+        <p>No data available.</p>
+    </div>
+</div>
+</body>
+</html>
+
+

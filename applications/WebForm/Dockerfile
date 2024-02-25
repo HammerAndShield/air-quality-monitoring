@@ -7,8 +7,8 @@ WORKDIR /app
 ARG JAR_FILE=build/libs/*-SNAPSHOT.jar
 COPY ${JAR_FILE} app.jar
 
-# Make port 8080 available to the world outside this container
-EXPOSE 8090
+# Make port 5000 available to the world outside this container
+EXPOSE 5000
 
 # Run the jar file
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

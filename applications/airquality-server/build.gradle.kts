@@ -32,6 +32,7 @@ dependencies {
 
     // Mockk for mocking in Kotlin
     testImplementation("io.mockk:mockk:1.12.0")
+    testImplementation("org.mockito:mockito-core:5.10.0")
 }
 
 tasks.withType<KotlinCompile> {

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Las Vegas Air Quality Records</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .content {
+            text-align: center;
+        }
+        .table-container {
+            max-width: 800px;
+            margin: auto;
+        }
+        table, th, td {
+            border: 1px solid #ffffff;
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .pollutants-table {
+            width: 100%;
+        }
+        .pollutants-table th, .pollutants-table td {
+            border: none;
+            color: #ffffff;
+        }
+        h1, h2 {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <h1>Latest 3 Days Las Vegas Air Quality Records</h1>
+    <h2>Average AQI: <span th:text="${averageAqi}"></span></h2>
+    <div th:if="${averageAqi != null}" class="table-container">
+        <table class="parent-table">
+            <tr>
+                <th>Timestamp</th>
+                <th>Total AQI</th>
+                <th>Pollutants</th>
+            </tr>
+            <tr th:each="record : ${airQualityDataList}">
+                <td th:text="${#temporals.format(record.timestamp, 'yyyy-MM-dd ''at'' HH:mm')}"></td>
+                <td th:text="${record.overallAqi}"></td>
+                <td>
+                    <table class="pollutants-table">
+                        <tr>
+                            <th>Name</th>
+                            <th>Concentration</th>
+                            <th>Pollutant AQI</th>
+                        </tr>
+                        <tr th:each="pollutant : ${record.pollutants}">
+                            <td th:text="${pollutant.name}"></td>
+                            <td th:text="${pollutant.concentration}"></td>
+                            <td th:text="${pollutant.aqi}"></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div th:if="${averageAqi == null}">
+        <p>There was an error retrieving the air quality data. Please try again later.</p>
+    </div>
+</div>
+</body>
+</html>
+
+
