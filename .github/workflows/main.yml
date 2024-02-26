@@ -1,0 +1,35 @@
+name: Integration Tests
+
+on: 
+  push:
+    branches: [ main, develop ]   
+  pull_request:                
+
+jobs:
+  run-integration-tests:
+    runs-on: ubuntu-latest  
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'       
+          distribution: 'temurin' 
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle- 
+
+      - name: Run integration tests with Testcontainers
+        run: |   
+          npm install -g testcontainers 
+          ./gradlew integrationTest
