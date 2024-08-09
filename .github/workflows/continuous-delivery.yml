@@ -1,0 +1,86 @@
+name: Continuous Delivery to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build and push airquality-server image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./applications/airquality-server
+          push: true
+          tags: ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/app-1:latest
+          dockerfile: ./applications/airquality-server/Dockerfile
+          secrets:
+            DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+            DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Deploy to EC2 Air-Quality-Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            docker pull ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/airquality-server:latest
+            docker stop airquality-server
+            docker rm airquality-server
+            docker run -d --name airquality-server -p 8090:8090 ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/airquality-server:latest
+
+      - name: Build and push data-collector-applications image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./applications/data-collector-applications
+          push: true
+          tags: ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/app-1:latest
+          dockerfile: ./applications/data-collector-applications/Dockerfile
+          secrets:
+            DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+            DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Deploy to EC2 data-collector-applications image
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            docker pull ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/data-collector-applications:latest
+            docker stop data-collector-applications
+            docker rm data-collector-applications 
+            docker run -d --name data-collector-applications -p 8080:8080 ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/data-collector-applications:latest
+
+      - name: Build and push WebForm
+        uses: docker/build-push-action@v3
+        with:
+          context: ./applications/WebForm
+          push: true
+          tags: ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/WebForm:latest
+          dockerfile: ./applications/WebForm/Dockerfile
+          secrets:
+            DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+            DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Deploy to EC2 WebForm # Corrected the name 'WebForm' here
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            docker pull ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/WebForm:latest
+            docker stop WebForm 
+            docker rm WebForm 
+            docker run -d --name Webform -p 5000:5000 ${{ secrets.DOCKER_REGISTRY_USERNAME }}/${{ github.repository }}/WebForm:latest
+
